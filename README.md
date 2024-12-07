@@ -1,11 +1,37 @@
 # Aegis-Screenshot-Assitor
-an Automatic Screenshot Program BUTTT HIGHLY CUSTOMIZABLE WITH OPTIONS SUCH AS:
+
+an Automatic Screenshot Program BUT HIGHLY CUSTOMIZABLE WITH OPTIONS SUCH AS:
+
 WEBHOOK URL
+
 USER ID
+
 CUSTOM TEXT
+
 CUSTOM GIF
+
 CUSTOMIZABLE WINDOW WHICH SHOULD BE USED TO TAKE THE SCREENSHOT OF
+
 Credits to steveonly2 (Main Dev), Pyt (Dev)
+
+
+# INSTALLATION
+
+# DOWNLOAD PYTHON -https://www.python.org/ftp/python/3.12.7/python-3.12.7-amd64.exe (64 bit for windows)
+
+# ADD IT TO PATH.
+
+# THEN OPEN COMMAND PROMPT AND COPY AND PASTE COMMAND GIVEN BELOW ONE BY ONE.
+
+pip install pywin32
+
+pip install keyboard
+
+pip install Pillow
+
+pip install requests
+
+pip install discord-webhook
 
 
 Licensed by
