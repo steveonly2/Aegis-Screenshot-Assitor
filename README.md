@@ -10,7 +10,9 @@ CUSTOM TEXT
 
 CUSTOM GIF
 
-CUSTOMIZABLE WINDOW WHICH SHOULD BE USED TO TAKE THE SCREENSHOT OF
+CUSTOMIZABLE WINDOW WHICH SHOULD BE USED TO TAKE THE SCREENSHOT OF.
+
+Made using pywin32 library and tkinter and some inbuilt and common modules
 
 Credits to steveonly2 (Main Dev), Pyt (Dev)
 
