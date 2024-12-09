@@ -35,6 +35,17 @@ pip install requests
 
 pip install discord-webhook
 
+pip install io
+
+pip install datetime
+
+pip install customtkinter
+
+pip install win32ui
+
+pip install win32con
+
+
 
 Licensed by
 
