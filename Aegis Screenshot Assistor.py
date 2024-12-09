@@ -16,7 +16,7 @@ from datetime import datetime
 
 
 # MADE BY steveonly2,steveonly4,Steve ( my multiple names depending on the platform lol, Steve is my real name)
-# project's v6.0 started on 9/12/24 and finished 9/12/24
+# project's v6.0 
 WINDOW_TITLE = "Roblox"
 
 DEFAULT_SETTINGS = {
