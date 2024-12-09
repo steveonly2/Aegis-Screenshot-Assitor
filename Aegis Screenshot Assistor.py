@@ -1,47 +1,65 @@
+import time
 import win32gui
 import win32ui
 import win32con
 import tkinter as tk
+import customtkinter as ctk
 from tkinter import filedialog, messagebox, simpledialog
 import json
 import threading
 import keyboard
-import time
 from PIL import Image
 from discord_webhook import DiscordWebhook, DiscordEmbed
 import io
+import os
+from datetime import datetime
 
-# Window title for Roblox
+
+# MADE BY steveonly2,steveonly4,Steve ( my multiple names depending on the platform lol, Steve is my real name)
+# project's v6.0 started on 9/12/24 and finished 9/12/24
 WINDOW_TITLE = "Roblox"
 
-# Load settings from JSON
+DEFAULT_SETTINGS = {
+    "custom_text": "Hiyah! This is an automated script/F2 test to send screenshots!",
+    "gif_path": "",
+    "user_id": "",
+    "webhook_url": "https://discord.com/api/webhooks/example",
+    "screenshot_delay": 60, 
+    "dark_mode": False  
+}
+
+def check_and_create_settings():
+    if not os.path.exists("settings.json"):
+        with open("settings.json", "w") as f:
+            json.dump(DEFAULT_SETTINGS, f, indent=4)
+
+
 def load_settings():
+    check_and_create_settings() 
     try:
         with open("settings.json", "r") as f:
             return json.load(f)
     except (FileNotFoundError, json.JSONDecodeError):
-        return {
-            "custom_text": "Hiyah! This is an automated script/F2 test to send screenshots!",
-            "gif_path": "",
-            "user_id": "",
-            "webhook_url": "https://discord.com/api/webhooks/example"
-        }
+        return DEFAULT_SETTINGS
 
-# Save settings to JSON
 def save_settings(settings):
     with open("settings.json", "w") as f:
         json.dump(settings, f, indent=4)
 
-# Global variables for settings
+
 settings = load_settings()
 custom_text = settings.get("custom_text", "Default Custom Text")
 gif_path = settings.get("gif_path", "")
 user_id = settings.get("user_id", "")
 WEBHOOK_URL = settings.get("webhook_url", "")
+screenshot_delay = settings.get("screenshot_delay", 60)  
 capturing = False
 selected_hwnd = None
+start_time = None  
+window_name = ""   
+dark_mode = settings.get("dark_mode", False)  
 
-# Capture the entire Roblox window dynamically
+
 def capture_window(hwnd):
     try:
         left, top, right, bottom = win32gui.GetWindowRect(hwnd)
@@ -56,10 +74,9 @@ def capture_window(hwnd):
         cDC.SelectObject(dataBitMap)
         cDC.BitBlt((0, 0), (width, height), dcObj, (0, 0), win32con.SRCCOPY)
 
-        # Convert to PIL image
         bmpinfo = dataBitMap.GetInfo()
         bmpstr = dataBitMap.GetBitmapBits(True)
-        img = Image.frombuffer(
+        img = Image.frombytes(
             "RGB", (bmpinfo["bmWidth"], bmpinfo["bmHeight"]),
             bmpstr, "raw", "BGRX", 0, 1
         )
@@ -68,30 +85,39 @@ def capture_window(hwnd):
         print(f"Error capturing window: {e}")
         return None
     finally:
-        # Cleanup resources
         cDC.DeleteDC()
         dcObj.DeleteDC()
         win32gui.ReleaseDC(hwnd, wDC)
         win32gui.DeleteObject(dataBitMap.GetHandle())
 
-# Send the screenshot to the webhook
+
 def send_screenshot_to_webhook(screenshot):
     if not WEBHOOK_URL:
         print("Webhook URL is not set. Please configure it in the GUI.")
         return
 
     try:
-        webhook = DiscordWebhook(url=WEBHOOK_URL)
-        embed = DiscordEmbed(title="Screenshot Captured", description=custom_text, color=16711680)
+        
+        elapsed_time = time.time() - start_time
+        elapsed_time_str = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
 
-        # Attach the screenshot
+        
+        current_date = datetime.now().strftime("%d %B %Y")  
+
+       
+        embed = DiscordEmbed(title="Screenshot Captured", description=custom_text, color=16711680)
+        embed.add_embed_field(name="Time Elapsed", value=elapsed_time_str, inline=True)
+        embed.add_embed_field(name="Date", value=current_date, inline=True)  # Added Date to embed
+        embed.add_embed_field(name="Window Name", value=window_name, inline=True)
+
         with io.BytesIO() as image_binary:
             screenshot.save(image_binary, "PNG")
             image_binary.seek(0)
+            webhook = DiscordWebhook(url=WEBHOOK_URL)
             webhook.add_file(file=image_binary.read(), filename="screenshot.png")
         embed.set_image(url="attachment://screenshot.png")
 
-        # Attach the GIF if provided
+       
         if gif_path:
             with open(gif_path, "rb") as gif_file:
                 webhook.add_file(file=gif_file.read(), filename="custom.gif")
@@ -106,7 +132,7 @@ def send_screenshot_to_webhook(screenshot):
     except Exception as e:
         print(f"Error sending screenshot to webhook: {e}")
 
-# List all Roblox windows and allow the user to select one
+
 def select_roblox_window():
     def enum_windows(hwnd, results):
         if win32gui.IsWindowVisible(hwnd) and WINDOW_TITLE in win32gui.GetWindowText(hwnd):
@@ -129,42 +155,52 @@ def select_roblox_window():
         messagebox.showerror("Error", "No Roblox windows found.")
         return None
 
-# Start capturing screenshots
+def show_credits():
+    credits_text = """
+    Made by: steveonly2
+    Date: 7/12/24
+
+    Developers: Steve, Pyt
+    """
+    messagebox.showinfo("Credits", credits_text)
+
+
 def capture_screenshot():
-    global capturing, selected_hwnd
+    global capturing, selected_hwnd, start_time, window_name
     print("Automatic capturing started. Press F2 for a manual screenshot.")
     last_capture_time = time.time()
     while capturing:
         try:
             current_time = time.time()
-            
-            # Send periodic screenshot every 60 seconds
-            if current_time - last_capture_time >= 60:
+
+            if current_time - last_capture_time >= screenshot_delay:
                 screenshot = capture_window(selected_hwnd)
                 if screenshot:
                     send_screenshot_to_webhook(screenshot)
                     print("Periodic screenshot captured.")
                 last_capture_time = current_time
 
-            # Check for manual screenshot with F2
             if keyboard.is_pressed("F2"):
                 screenshot = capture_window(selected_hwnd)
                 if screenshot:
                     send_screenshot_to_webhook(screenshot)
                     print("Manual screenshot captured.")
-                time.sleep(1)  # Prevent multiple triggers
+                time.sleep(1) 
         except Exception as e:
             print(f"Error during capture loop: {e}")
             capturing = False
             break
 
-# Start capturing thread
+
 def on_start_capture():
-    global capturing, selected_hwnd
+    global capturing, selected_hwnd, start_time, window_name
     if not capturing:
         selected_hwnd = select_roblox_window()
         if not selected_hwnd:
             return
+
+        window_name = win32gui.GetWindowText(selected_hwnd)
+        start_time = time.time()
         capturing = True
         capture_thread = threading.Thread(target=capture_screenshot)
         capture_thread.daemon = True
@@ -173,19 +209,42 @@ def on_start_capture():
     else:
         messagebox.showinfo("Info", "Already capturing screenshots.")
 
-# Update settings from GUI
+
+def on_stop_capture():
+    global capturing
+    if capturing:
+        capturing = False
+        print("Stopped capturing screenshots.")
+    else:
+        messagebox.showinfo("Info", "No capturing in progress.")
+
 def update_settings():
-    global custom_text, user_id, WEBHOOK_URL
+    global custom_text, user_id, WEBHOOK_URL, screenshot_delay, dark_mode
     custom_text = custom_text_entry.get() or "Default Custom Text"
     user_id = user_id_entry.get()
     WEBHOOK_URL = webhook_url_entry.get() or settings["webhook_url"]
+    try:
+        screenshot_delay = int(screenshot_delay_entry.get())
+    except ValueError:
+        messagebox.showerror("Invalid Input", "Please enter a valid number for delay in seconds.")
+        return
 
+    dark_mode = dark_mode_var.get()   
     settings["custom_text"] = custom_text
     settings["user_id"] = user_id
     settings["webhook_url"] = WEBHOOK_URL
+    settings["screenshot_delay"] = screenshot_delay
+    settings["dark_mode"] = dark_mode
     save_settings(settings)
 
-# Select a GIF file
+ 
+    if dark_mode:
+        ctk.set_appearance_mode("dark")
+    else:
+        ctk.set_appearance_mode("light")
+
+    messagebox.showinfo("Success", "Settings successfully updated.")
+
 def select_gif():
     global gif_path
     gif_path = filedialog.askopenfilename(title="Select a GIF", filetypes=[("GIF files", "*.gif")])
@@ -195,58 +254,65 @@ def select_gif():
     else:
         messagebox.showwarning("Warning", "No file selected.")
 
-def show_credits():
-    credits_text = """
-    Made by: steveonly2
-    Date: 7/12/24
-
-    Developers: Pyt
-    """
-    messagebox.showinfo("Credits", credits_text)
 # GUI for user inputs
 def start_gui():
-    global custom_text_entry, user_id_entry, webhook_url_entry
+    global custom_text_entry, user_id_entry, webhook_url_entry, screenshot_delay_entry, dark_mode_var
 
-    
-
-    root = tk.Tk()
+    root = ctk.CTk()
     root.title("Aegis Screenshot Assistor")
 
-    # Custom text input
-    tk.Label(root, text="Custom Text:").grid(row=0, column=0, padx=10, pady=10)
-    custom_text_entry = tk.Entry(root, width=50)
+    
+    ctk.CTkLabel(root, text="Custom Text:").grid(row=0, column=0, padx=10, pady=10)
+    custom_text_entry = ctk.CTkEntry(root, width=50)
     custom_text_entry.grid(row=0, column=1, padx=10, pady=10)
     custom_text_entry.insert(0, custom_text)
 
-    # User ID input
-    tk.Label(root, text="User ID (for ping):").grid(row=1, column=0, padx=10, pady=10)
-    user_id_entry = tk.Entry(root, width=50)
+    
+    ctk.CTkLabel(root, text="User ID (for ping):").grid(row=1, column=0, padx=10, pady=10)
+    user_id_entry = ctk.CTkEntry(root, width=50)
     user_id_entry.grid(row=1, column=1, padx=10, pady=10)
     user_id_entry.insert(0, user_id)
 
-    # Webhook URL input
-    tk.Label(root, text="Webhook URL:").grid(row=2, column=0, padx=10, pady=10)
-    webhook_url_entry = tk.Entry(root, width=50)
+   
+    ctk.CTkLabel(root, text="Webhook URL:").grid(row=2, column=0, padx=10, pady=10)
+    webhook_url_entry = ctk.CTkEntry(root, width=50)
     webhook_url_entry.grid(row=2, column=1, padx=10, pady=10)
     webhook_url_entry.insert(0, WEBHOOK_URL)
 
-    # Button to update settings
-    update_button = tk.Button(root, text="Update Settings", command=update_settings)
-    update_button.grid(row=3, column=0, columnspan=2, padx=10, pady=10)
 
-    # Button to select GIF
-    gif_button = tk.Button(root, text="Select GIF", command=select_gif)
-    gif_button.grid(row=4, column=0, columnspan=2, padx=10, pady=10)
+    ctk.CTkLabel(root, text="Screenshot Delay (seconds):").grid(row=3, column=0, padx=10, pady=10)
+    screenshot_delay_entry = ctk.CTkEntry(root, width=50)
+    screenshot_delay_entry.grid(row=3, column=1, padx=10, pady=10)
+    screenshot_delay_entry.insert(0, str(screenshot_delay))
 
-    # Button to start capturing
-    start_button = tk.Button(root, text="Start Capturing", command=on_start_capture)
-    start_button.grid(row=5, column=0, columnspan=2, padx=10, pady=10)
+   
+    dark_mode_var = ctk.BooleanVar(value=dark_mode)
+    dark_mode_checkbox = ctk.CTkCheckBox(root, text="Enable Dark Mode", variable=dark_mode_var)
+    dark_mode_checkbox.grid(row=4, column=0, columnspan=2, padx=10, pady=10)
 
-    credits_button = tk.Button(root, text="Credits", command=show_credits)
-    credits_button.grid(row=6, column=0, columnspan=2, padx=10, pady=10)
+   
+    update_button = ctk.CTkButton(root, text="Update Settings", command=update_settings)
+    update_button.grid(row=5, column=0, columnspan=2, padx=10, pady=10)
+
+    
+    gif_button = ctk.CTkButton(root, text="Select GIF", command=select_gif)
+    gif_button.grid(row=6, column=0, columnspan=2, padx=10, pady=10)
+
+    
+    start_button = ctk.CTkButton(root, text="Start Capturing", command=on_start_capture)
+    start_button.grid(row=7, column=0, columnspan=2, padx=10, pady=10)
+
+    
+    stop_button = ctk.CTkButton(root, text="Stop Capturing", command=on_stop_capture)
+    stop_button.grid(row=8, column=0, columnspan=2, padx=10, pady=10)
+
+    
+    credits_button = ctk.CTkButton(root, text="Credits", command=show_credits)
+    credits_button.grid(row=9, column=0, columnspan=2, padx=10, pady=10)
 
     root.protocol("WM_DELETE_WINDOW", lambda: root.quit())
     root.mainloop()
 
 if __name__ == "__main__":
     start_gui()
+
