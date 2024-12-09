@@ -1,20 +1,12 @@
 # Aegis-Screenshot-Assitor
 
-an Automatic Screenshot Program THAT WORKS WHEN THE PROGRAM IS TABBED OUT. BUT HIGHLY CUSTOMIZABLE WITH OPTIONS SUCH AS:
+an Automatic Screenshot Program THAT WORKS WHEN THE PROGRAM IS TABBED OUT. BUT HIGHLY CUSTOMIZABLE!!
 
-WEBHOOK URL
 
-USER ID
+Made using pywin32 Customtkinter library and tkinter and some inbuilt and common modules
 
-CUSTOM TEXT
-
-CUSTOM GIF
-
-CUSTOMIZABLE WINDOW WHICH SHOULD BE USED TO TAKE THE SCREENSHOT OF.
-
-Made using pywin32 library and Customtkinter and some inbuilt and common modules
-
-Credits to steveonly2 (Main Dev), Pyt (Dev)
+Credits to steveonly2 (Main Dev), Pyt (Dev), Tyler (Dev)
+Owner: steveonly2
 
 
 # INSTALLATION
@@ -23,27 +15,7 @@ Credits to steveonly2 (Main Dev), Pyt (Dev)
 
 # ADD IT TO PATH.
 
-# THEN OPEN COMMAND PROMPT AND COPY AND PASTE COMMAND GIVEN BELOW ONE BY ONE.
-
-pip install pywin32
-
-pip install keyboard
-
-pip install Pillow
-
-pip install requests
-
-pip install discord-webhook
-
-pip install io
-
-pip install datetime
-
-pip install customtkinter
-
-pip install win32ui
-
-pip install win32con
+THEN RUN THE installer.bat
 
 
 
